@@ -684,7 +684,7 @@ rflect.ui.MomentumScroller.prototype.doMomentum = function() {
   // start and end position / time.
   var velocity = this.getEndVelocity();
   if (goog.DEBUG)
-    _log('velocity',velocity);
+    console.log('velocity',velocity);
   if (velocity != 0) {
     var acceleration = this.getAcceleration(velocity);
     var displacement = - (velocity * velocity) / (2 * acceleration);
@@ -717,7 +717,7 @@ rflect.ui.MomentumScroller.prototype.doMomentum = function() {
 
 rflect.ui.MomentumScroller.prototype.setUpTransitionStage1 = function() {
   if (goog.DEBUG)
-  _log('stage1');
+  console.log('stage1');
   var velocity = this.getEndVelocity();
   var acceleration = this.getAcceleration(velocity);
   var displacement;
@@ -730,12 +730,12 @@ rflect.ui.MomentumScroller.prototype.setUpTransitionStage1 = function() {
     this.contentOffsetY = this.getLowestContentPosition();
   }
   if (goog.DEBUG)
-  _log('displacement',displacement);
+  console.log('displacement',displacement);
 
   this.endMomentumVelocity_ = (velocity < 0 ? -1 : 1) *
       this.getEndMomentumVelocity(velocity, displacement, acceleration);
   if (goog.DEBUG)
-    _log('this.endMomentumVelocity_', this.endMomentumVelocity_);
+    console.log('this.endMomentumVelocity_', this.endMomentumVelocity_);
   var time = Math.abs((velocity - this.endMomentumVelocity_) / acceleration);
 
   //This is an y delta to flatten bezier function towards linear one if end
@@ -761,7 +761,7 @@ rflect.ui.MomentumScroller.prototype.setUpTransitionStage1 = function() {
 
 rflect.ui.MomentumScroller.prototype.setUpTransitionStage2 = function() {
   if (goog.DEBUG)
-  _log('stage2');
+  console.log('stage2');
   var velocity = this.endMomentumVelocity_;
   var acceleration = this.getAcceleration(velocity) *
       rflect.ui.MomentumScroller.ACCELERATION_BOUNCE_BACK_COEFF;
@@ -769,7 +769,7 @@ rflect.ui.MomentumScroller.prototype.setUpTransitionStage2 = function() {
   var time = 100;
 
   if (goog.DEBUG)
-    _log('velocity',velocity);
+    console.log('velocity',velocity);
 
   if (displacement > rflect.ui.MomentumScroller.OUT_OF_BOUNDS_MAXIMUM)
     displacement = rflect.ui.MomentumScroller.OUT_OF_BOUNDS_MAXIMUM;

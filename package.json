@@ -1,5 +1,5 @@
 {
-  "name": "momentums-scroller",
+  "name": "momentum-scroller",
   "version": "0.0.1",
   "description": "scroller utility",
   "main": "",
@@ -7,7 +7,7 @@
   },
   "private": true,
   "scripts": {
-    "build": "jade index.jade & lessc --clean-css less/all.less css/all.css"
+    "build": "python src/closure/closure/bin/build/closurebuilder.py -n rflect.ui.MomentumScroller --root=src/closure --root=src/reflect --root=src/momentum-scroller -o compiled --output_file=build/_temp0.outputcompiled-en-debug.js --compiler_jar=bin/compiler.jar --compiler_flags=\"--charset=utf-8\" --compiler_flags=\"--compilation_level=ADVANCED_OPTIMIZATIONS\" --compiler_flags=\"--summary_detail_level=3\" --compiler_flags=\"--warning_level=VERBOSE\" --compiler_flags=\"--js=src/closure/closure/goog/deps.js\" --compiler_flags=\"--debug=false\" --compiler_flags=\"--source_map_format=V3\" --compiler_flags=\"--closure_entry_point=rflect.ui.MomentumScroller\" --compiler_flags=\"--language_in=ECMASCRIPT6\" --compiler_flags=\"--language_out=ECMASCRIPT5\" --compiler_flags=\"--output_wrapper=;(function(){%output%})();\" --compiler_flags=\"--externs=src/externs.js\" --compiler_flags=\"--define='goog.DEBUG=false'\""
   },
   "keywords": [
     "scroller", "helper", "ios"

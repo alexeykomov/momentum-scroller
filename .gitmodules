@@ -1,0 +1,6 @@
+[submodule "src/reflect"]
+	path = src/reflect
+	url = https://github.com/alexeykomov/reflect-common.git
+[submodule "src/closure"]
+	path = src/closure
+	url = https://github.com/google/closure-library.git

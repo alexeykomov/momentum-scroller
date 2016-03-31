@@ -1,0 +1,23 @@
+{
+  "name": "momentums-scroller",
+  "version": "0.0.1",
+  "description": "scroller utility",
+  "main": "",
+  "directories": {
+  },
+  "private": true,
+  "scripts": {
+    "build": "jade index.jade & lessc --clean-css less/all.less css/all.css"
+  },
+  "keywords": [
+    "scroller", "helper", "ios"
+  ],
+  "author": [
+    "alexeykcontact@gmail.com (Alex K)"
+  ],
+  "license": "commercial",
+  "devDependencies": {
+  },
+  "dependencies": {
+  }
+}

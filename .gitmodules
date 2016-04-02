@@ -4,6 +4,3 @@
 [submodule "src/closure"]
 	path = src/closure
 	url = https://github.com/google/closure-library.git
-[submodule "demo"]
-	path = demo
-	url = https://github.com/alexeykomov/momentum-scroller-demo.git

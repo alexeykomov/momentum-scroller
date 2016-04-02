@@ -875,6 +875,3 @@ rflect.ui.MomentumScroller.prototype.disposeInternal = function() {
   rflect.ui.MomentumScroller.superClass_.disposeInternal.call(this);
 
 };
-
-
-goog.exportSymbol('MomentumScroller', rflect.ui.MomentumScroller);

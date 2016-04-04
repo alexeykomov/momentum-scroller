@@ -10,25 +10,11 @@
 
 goog.provide('rflect.ui.MomentumScrollerAPI');
 
+goog.require('rflect.ui.MomentumScroller');
 
-rflect.ui.MomentumScrollerAPI = {
-  watchNode: (aElement, aSelector) => {
 
-    return key;
-  },
-  unwatchNode: (aKey) => {
+goog.exportSymbol('rflect.ui.MomentumScroller', MomentumScroller);
+goog.exportSymbol('rflect.ui.MomentumScroller.prototype.add', MomentumScroller.prototype.add);
+goog.exportSymbol('rflect.ui.MomentumScroller.prototype.remove', MomentumScroller.prototype.remove);
+goog.exportSymbol('rflect.ui.MomentumScroller.prototype.reset', MomentumScroller.prototype.reset);
 
-  },
-  MomentumScroller: rflect.ui.MomentumScroller.
-  MomentumScrollerManager: rflect.ui.MomentumScrollerManager
-}
-
-goog.exportSymbol('rflect.ui.MomentumScrollerAPI', MomentumScrollerAPI);
-goog.exportSymbol('rflect.ui.MomentumScrollerAPI.watchNode',
-    MomentumScroller.watchNode);
-goog.exportSymbol('rflect.ui.MomentumScrollerAPI.unwatchNode',
-    MomentumScroller. unwatchNode);
-goog.exportSymbol('rflect.ui.MomentumScrollerAPI.MomentumScroller',
-    MomentumScrollerAPI.MomentumScroller);
-goog.exportSymbol('rflect.ui.MomentumScrollerAPI.MomentumScrollerManager',
-    MomentumScrollerAPI.MomentumScroller);

@@ -286,6 +286,36 @@ rflect.ui.MomentumScroller.prototype.enable = function(aEnabled) {
 
 
 /**
+ * Attaches scroller.
+ * @param {Element} aElement Scrollable element to add scroller to.
+ */
+rflect.ui.MomentumScroller.prototype.add = function(aElement) {
+  this.setFrameElement(aElement);
+  this.setElement(goog.dom.getFirstElementChild(aElement));
+  this.enable(true);
+}
+
+
+/**
+ * Detaches scroller.
+ */
+rflect.ui.MomentumScroller.prototype.remove = function() {
+  this.enable(false);
+}
+
+
+/**
+ * Detaches/attaches scroller.
+ * @param {Element} aElement Scrollable element to add scroller to.
+ */
+rflect.ui.MomentumScroller.prototype.reset = function(aElement) {
+  this.remove();
+  this.add(aElement);
+  this.animateWithinBounds(0);
+}
+
+
+/**
  * Calculates sizes of frame and content elements.
  */
 rflect.ui.MomentumScroller.prototype.calculateSizes = function() {
@@ -374,6 +404,8 @@ rflect.ui.MomentumScroller.prototype.onTouchStart = function(aEvent) {
   // This will be shown in part 4.
   this.stopMomentum();
   if (this.stopPropagationOnTouchEnd_) {
+    if (goog.DEBUG)
+      console.log('aEvent touch start: ', aEvent);
     aEvent.stopPropagation();
     aEvent.preventDefault();
   }
@@ -423,7 +455,7 @@ rflect.ui.MomentumScroller.prototype.onTouchMove = function(aEvent) {
 
 
 /**
- * @param {Event} aEvent object.
+ * @param {goog.events.BrowserEvent} aEvent object.
  */
 rflect.ui.MomentumScroller.prototype.onTouchEnd = function(aEvent) {
   if (goog.DEBUG)
@@ -443,7 +475,13 @@ rflect.ui.MomentumScroller.prototype.onTouchEnd = function(aEvent) {
   if (this.stopPropagationOnTouchEnd_ || (Math.abs(this.currentPoint_ -
       this.startTouchY) >= rflect.ui.MomentumScroller.DRAG_THRESHOLD)) {
     //Prevent accidental selection of chips on main pane.
-    aEvent.stopPropagation();
+    if (goog.DEBUG)
+      console.log('aEvent touch end: ', aEvent);
+    if (aEvent.stopPropagation) {
+      aEvent.stopPropagation();
+    } else {
+      aEvent.getBrowserEvent().stopPropagation();
+    }
     aEvent.preventDefault();
 
     this.stopPropagationOnTouchEnd_ = false;
@@ -514,7 +552,7 @@ rflect.ui.MomentumScroller.needsFocus = function(aElement) {
 
 
 /**
- * @param {Event} aEvent object.
+ * @param {goog.events.BrowserEvent} aEvent object.
  */
 rflect.ui.MomentumScroller.prototype.onTransitionEnd = function(aEvent) {
 
@@ -875,3 +913,10 @@ rflect.ui.MomentumScroller.prototype.disposeInternal = function() {
   rflect.ui.MomentumScroller.superClass_.disposeInternal.call(this);
 
 };
+
+
+goog.exportSymbol('MomentumScroller', rflect.ui.MomentumScroller);
+goog.exportSymbol('MomentumScroller.prototype.add', rflect.ui.MomentumScroller.prototype.add);
+goog.exportSymbol('MomentumScroller.prototype.remove', rflect.ui.MomentumScroller.prototype.remove);
+goog.exportSymbol('MomentumScroller.prototype.reset', rflect.ui.MomentumScroller.prototype.reset);
+goog.exportSymbol('MomentumScroller.prototype.dispose', rflect.ui.MomentumScroller.prototype.dispose);

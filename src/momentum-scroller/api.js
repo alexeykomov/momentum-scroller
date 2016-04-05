@@ -3,18 +3,9 @@
  */
 
 /**
- * @fileoverview Class for decorating scrollable elements with momentum
- * scrolling behavior.
- * {@see} https://developers.google.com/mobile/articles/webapp_fixed_ui#animating
+ * @fileoverview External API container.
  */
 
-goog.provide('rflect.ui.MomentumScrollerAPI');
+import MomentumScroller from 'goog:rflect.ui.MomentumScroller';
 
-goog.require('rflect.ui.MomentumScroller');
-
-
-goog.exportSymbol('rflect.ui.MomentumScroller', MomentumScroller);
-goog.exportSymbol('rflect.ui.MomentumScroller.prototype.add', MomentumScroller.prototype.add);
-goog.exportSymbol('rflect.ui.MomentumScroller.prototype.remove', MomentumScroller.prototype.remove);
-goog.exportSymbol('rflect.ui.MomentumScroller.prototype.reset', MomentumScroller.prototype.reset);
-
+export default MomentumScroller;

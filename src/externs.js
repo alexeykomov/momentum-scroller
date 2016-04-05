@@ -9,6 +9,6 @@
 
 
 /**
- * @type {rflect.ui.MomentumScroller}
+ * @type {Object}
  */
-var MomentumScroller;
+var exports;

@@ -5,6 +5,7 @@
 /**
  * @fileoverview Class for decorating scrollable elements with momentum
  * scrolling behavior.
+ * {@see} https://web.archive.org/web/20141001100814/https://developers.google.com/mobile/articles/webapp_fixed_ui
  * {@see} https://developers.google.com/mobile/articles/webapp_fixed_ui#animating
  */
 

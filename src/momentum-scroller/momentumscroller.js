@@ -268,7 +268,7 @@ rflect.ui.MomentumScroller.prototype.enable = function(aEnabled) {
     this.calculateSizes();
 
     this.enterDocument();
-    this.animateTo(0);
+    this.animateWithinBounds(this.contentOffsetY);
   } else {
     rflect.ui.MomentumScroller.instancesCount_--;
     if (rflect.ui.MomentumScroller.instancesCount_ < 0)
@@ -277,11 +277,17 @@ rflect.ui.MomentumScroller.prototype.enable = function(aEnabled) {
     this.exitDocument();
     this.element = null;
     this.frameElement = null;
-
-    this.startTouchY = 0;
-    this.contentOffsetY = 0;
-    this.contentStartOffsetY = 0;
   }
+}
+
+
+/**
+ * @protected
+ */
+rflect.ui.MomentumScroller.prototype.resetInternal = function() {
+  this.startTouchY = 0;
+  this.contentOffsetY = 0;
+  this.contentStartOffsetY = 0;
 }
 
 
@@ -305,13 +311,51 @@ rflect.ui.MomentumScroller.prototype.remove = function() {
 
 
 /**
- * Detaches/attaches scroller.
+ * Detaches/attaches scroller losing scroll position.
  * @param {Element} aElement Scrollable element to add scroller to.
  */
 rflect.ui.MomentumScroller.prototype.reset = function(aElement) {
   this.remove();
+  this.resetInternal();
   this.add(aElement);
-  this.animateWithinBounds(0);
+}
+
+
+/**
+ * Detaches scroller, but without losing scroll position.
+ */
+rflect.ui.MomentumScroller.prototype.suspend = function() {
+  this.remove();
+}
+
+
+/**
+ * Attaches scroller to saved scroll position.
+ * @param {Element} aElement Scrollable element to add scroller to.
+ */
+rflect.ui.MomentumScroller.prototype.resume = function(aElement) {
+  if (goog.DEBUG)
+    console.log('Resuming to this.contentOffsetY: ', this.contentOffsetY);
+  this.add(aElement);
+  this.animateWithinBounds(this.contentOffsetY);
+}
+
+
+/**
+ * @return {number} Scroll top as in DOM.
+ */
+rflect.ui.MomentumScroller.prototype.getScrollTop = function() {
+  return isNaN(this.contentOffsetY) || this.contentOffsetY == 0 ? 0 :
+      -this.contentOffsetY;
+}
+
+
+/**
+ * @param {number} aScrollTop Scroll top as in DOM.
+ */
+rflect.ui.MomentumScroller.prototype.setScrollTop = function(aScrollTop) {
+  let scrollTop = isNaN(aScrollTop) || aScrollTop == 0 ? 0 : -aScrollTop;
+  this.animateWithinBounds(scrollTop);
 }
 
 
@@ -909,9 +953,8 @@ rflect.ui.MomentumScroller.prototype.isDecelerating = function() {
 rflect.ui.MomentumScroller.prototype.disposeInternal = function() {
   //Dispose logic specific for MomentumScroller.
   this.enable(false);
-
+  this.resetInternal();
   rflect.ui.MomentumScroller.superClass_.disposeInternal.call(this);
-
 };
 
 
@@ -919,4 +962,8 @@ goog.exportSymbol('MomentumScroller', rflect.ui.MomentumScroller);
 goog.exportSymbol('MomentumScroller.prototype.add', rflect.ui.MomentumScroller.prototype.add);
 goog.exportSymbol('MomentumScroller.prototype.remove', rflect.ui.MomentumScroller.prototype.remove);
 goog.exportSymbol('MomentumScroller.prototype.reset', rflect.ui.MomentumScroller.prototype.reset);
+goog.exportSymbol('MomentumScroller.prototype.suspend', rflect.ui.MomentumScroller.prototype.suspend);
+goog.exportSymbol('MomentumScroller.prototype.resume', rflect.ui.MomentumScroller.prototype.resume);
+goog.exportSymbol('MomentumScroller.prototype.getScrollTop', rflect.ui.MomentumScroller.prototype.getScrollTop);
+goog.exportSymbol('MomentumScroller.prototype.setScrollTop', rflect.ui.MomentumScroller.prototype.setScrollTop);
 goog.exportSymbol('MomentumScroller.prototype.dispose', rflect.ui.MomentumScroller.prototype.dispose);

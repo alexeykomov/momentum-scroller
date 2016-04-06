@@ -951,31 +951,20 @@ rflect.ui.MomentumScroller.prototype.isDecelerating = function() {
 /**
  * Alias to setMouseMissToCancel with false argument.
  */
-rflect.ui.MomentumScroller.prototype.disposeInternal = function() {
+rflect.ui.MomentumScroller.prototy pe.disposeInternal = function() {
   //Dispose logic specific for MomentumScroller.
   this.enable(false);
   this.resetInternal();
   rflect.ui.MomentumScroller.superClass_.disposeInternal.call(this);
 };
 
-if (goog.global.exports) {
-  goog.exportSymbol('MomentumScroller', rflect.ui.MomentumScroller, goog.global.exports);
-  goog.exportSymbol('MomentumScroller.prototype.add', rflect.ui.MomentumScroller.prototype.add, goog.global.exports);
-  goog.exportSymbol('MomentumScroller.prototype.remove', rflect.ui.MomentumScroller.prototype.remove, goog.global.exports);
-  goog.exportSymbol('MomentumScroller.prototype.reset', rflect.ui.MomentumScroller.prototype.reset, goog.global.exports);
-  goog.exportSymbol('MomentumScroller.prototype.suspend', rflect.ui.MomentumScroller.prototype.suspend, goog.global.exports);
-  goog.exportSymbol('MomentumScroller.prototype.resume', rflect.ui.MomentumScroller.prototype.resume, goog.global.exports);
-  goog.exportSymbol('MomentumScroller.prototype.getScrollTop', rflect.ui.MomentumScroller.prototype.getScrollTop, goog.global.exports);
-  goog.exportSymbol('MomentumScroller.prototype.setScrollTop', rflect.ui.MomentumScroller.prototype.setScrollTop, goog.global.exports);
-  goog.exportSymbol('MomentumScroller.prototype.dispose', rflect.ui.MomentumScroller.prototype.dispose, goog.global.exports);
-} else {
-  goog.exportSymbol('MomentumScroller', rflect.ui.MomentumScroller);
-  goog.exportSymbol('MomentumScroller.prototype.add', rflect.ui.MomentumScroller.prototype.add);
-  goog.exportSymbol('MomentumScroller.prototype.remove', rflect.ui.MomentumScroller.prototype.remove);
-  goog.exportSymbol('MomentumScroller.prototype.reset', rflect.ui.MomentumScroller.prototype.reset);
-  goog.exportSymbol('MomentumScroller.prototype.suspend', rflect.ui.MomentumScroller.prototype.suspend);
-  goog.exportSymbol('MomentumScroller.prototype.resume', rflect.ui.MomentumScroller.prototype.resume);
-  goog.exportSymbol('MomentumScroller.prototype.getScrollTop', rflect.ui.MomentumScroller.prototype.getScrollTop);
-  goog.exportSymbol('MomentumScroller.prototype.setScrollTop', rflect.ui.MomentumScroller.prototype.setScrollTop);
-  goog.exportSymbol('MomentumScroller.prototype.dispose', rflect.ui.MomentumScroller.prototype.dispose);
-}
+goog.exportSymbol('MomentumScroller', rflect.ui.MomentumScroller);
+goog.exportSymbol('MomentumScroller.prototype.add', rflect.ui.MomentumScroller.prototype.add);
+goog.exportSymbol('MomentumScroller.prototype.remove', rflect.ui.MomentumScroller.prototype.remove);
+goog.exportSymbol('MomentumScroller.prototype.reset', rflect.ui.MomentumScroller.prototype.reset);
+goog.exportSymbol('MomentumScroller.prototype.suspend', rflect.ui.MomentumScroller.prototype.suspend);
+goog.exportSymbol('MomentumScroller.prototype.resume', rflect.ui.MomentumScroller.prototype.resume);
+goog.exportSymbol('MomentumScroller.prototype.getScrollTop', rflect.ui.MomentumScroller.prototype.getScrollTop);
+goog.exportSymbol('MomentumScroller.prototype.setScrollTop', rflect.ui.MomentumScroller.prototype.setScrollTop);
+goog.exportSymbol('MomentumScroller.prototype.dispose', rflect.ui.MomentumScroller.prototype.dispose);
+

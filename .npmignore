@@ -25,3 +25,5 @@ client_secret_*.json
 src
 demo
 bin
+.npmignore
+.gitignore

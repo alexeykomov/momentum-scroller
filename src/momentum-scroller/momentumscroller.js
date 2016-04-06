@@ -951,7 +951,7 @@ rflect.ui.MomentumScroller.prototype.isDecelerating = function() {
 /**
  * Alias to setMouseMissToCancel with false argument.
  */
-rflect.ui.MomentumScroller.prototy pe.disposeInternal = function() {
+rflect.ui.MomentumScroller.prototype.disposeInternal = function() {
   //Dispose logic specific for MomentumScroller.
   this.enable(false);
   this.resetInternal();

@@ -958,6 +958,7 @@ rflect.ui.MomentumScroller.prototype.disposeInternal = function() {
   rflect.ui.MomentumScroller.superClass_.disposeInternal.call(this);
 };
 
+
 goog.exportSymbol('MomentumScroller', rflect.ui.MomentumScroller);
 goog.exportSymbol('MomentumScroller.prototype.add', rflect.ui.MomentumScroller.prototype.add);
 goog.exportSymbol('MomentumScroller.prototype.remove', rflect.ui.MomentumScroller.prototype.remove);

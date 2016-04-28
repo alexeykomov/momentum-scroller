@@ -1,6 +1,6 @@
 {
   "name": "momentum-scroller",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "scroller utility",
   "main": "./build/momentum-scroller.js",
   "directories": {

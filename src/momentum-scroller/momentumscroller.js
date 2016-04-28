@@ -266,6 +266,13 @@ rflect.ui.MomentumScroller.prototype.stopPropagationOnTouchEnd_ = false;
 
 
 /**
+ * @type {boolean}
+ * @private
+ */
+rflect.ui.MomentumScroller.prototype.scrollBarIsEnabled_ = true;
+
+
+/**
  * What kind of out-of-bounds transition currently is in progress.
  * @type {rflect.ui.MomentumScroller.QUEUED_TRANSITION_STAGE}
  */
@@ -349,6 +356,24 @@ rflect.ui.MomentumScroller.prototype.setElements = function(aElement,
 
 
 /**
+ * Enables scroll bar.
+ * @param {boolean} aEnabled Whether to enable scroll bar.
+ */
+rflect.ui.MomentumScroller.prototype.setScrollBarEnabled = function(aEnabled) {
+  this.scrollBarIsEnabled_ = aEnabled;
+}
+
+
+/**
+ * Returns whether scroll bar is enabled.
+ * @return {boolean} aEnabled Whether scroll bar is enabled.
+ */
+rflect.ui.MomentumScroller.prototype.isScrollBarEnabled = function() {
+  return this.scrollBarIsEnabled_;
+}
+
+
+/**
  * Enables momentum scrolling. Call setElement before.
  * @see {setElement}
  * @param {boolean} aEnabled Whether to enable behavior.
@@ -371,9 +396,8 @@ rflect.ui.MomentumScroller.prototype.enable = function(aEnabled) {
     this.enterDocument();
     this.animateWithinBounds(this.contentOffsetY);
 
-    rflect.browser.css.setTransform(this.getScrollBarLine(), 'scaleY(' +
-        this.getScrollBarLineHeight(this.elementSize, this.frameElementSize) +
-        ')');
+    rflect.browser.css.setTransform(this.getScrollBarLine(),
+        `scaleY(${this.getScrollBarLineHeight()})`);
     this.frameElement.appendChild(this.getScrollBarContainer());
 
   } else {
@@ -483,19 +507,23 @@ rflect.ui.MomentumScroller.prototype.calculateSizes = function() {
 
 
 /**
- * @param {goog.math.Size} aElementSize Element's size.
- * @param {goog.math.Size} aFrameElementSize Frame element's size.
  * @return {number} Height of scrollbar line.
  */
-rflect.ui.MomentumScroller.prototype.getScrollBarLineHeight = function(
-    aElementSize, aFrameElementSize) {
-  const height = aFrameElementSize.height / (aElementSize.height /
-      aFrameElementSize.height);
+rflect.ui.MomentumScroller.prototype.getScrollBarLineHeight = function() {
+  const height = this.frameElementSize.height / this.getSizeRatio();
   return height < rflect.ui.MomentumScroller.SCROLLBAR_MIN_HEIGHT ?
       rflect.ui.MomentumScroller.SCROLLBAR_MIN_HEIGHT : height;
 }
 
 
+/**
+ * @return {number} How many times element is larger than frame element.
+ */
+rflect.ui.MomentumScroller.prototype.getSizeRatio = function() {
+  return this.elementSize.height / this.frameElementSize.height;
+}
+  
+  
 /**
  * @return {boolean} Whether mouse miss close is enabled.
  */
@@ -782,45 +810,50 @@ rflect.ui.MomentumScroller.prototype.animateTo = function(offsetY,
   // We use webkit-transforms with translate3d because these animations
   // will be hardware accelerated, and therefore significantly faster
   // than changing the top value.
-  rflect.browser.css.setTransform(this.element, 'translate3d(0, ' +
-      offsetY + 'px, 0)');
+  rflect.browser.css.setTransform(this.element,
+      `translate3d(0, ${offsetY}px, 0)`);
 
   if (!opt_doNotAnimateScrollBar) {
-    const lowestContentPosition = this.getLowestContentPosition();
-    let offsetYWithinBounds = offsetY;
-    if (offsetY > 0) {
-      offsetYWithinBounds = 0;
-    }
-    else if (offsetY < lowestContentPosition) {
-      offsetYWithinBounds = lowestContentPosition;
-    }
-    const deltaOutOfBounds = Math.abs(offsetY - offsetYWithinBounds);
-    const scrollBarLineReduced =
-        this.getScrollBarLineHeight(this.elementSize, this.frameElementSize) -
-        deltaOutOfBounds;
-    const scrollBarLineReducedBounded = scrollBarLineReduced <
-        rflect.ui.MomentumScroller.SCROLLBAR_MIN_HEIGHT ?
-        rflect.ui.MomentumScroller.SCROLLBAR_MIN_HEIGHT : scrollBarLineReduced;
-
-    if (offsetY > 0) {
-      rflect.browser.css.setTransform(this.getScrollBarContainer(),
-          'translate3d(0, ' + scrollBarLineReducedBounded / 2 + 'px, 0)');
-    } else if (offsetY < lowestContentPosition) {
-      rflect.browser.css.setTransform(this.getScrollBarContainer(),
-          'translate3d(0, ' + (this.frameElementSize.height - scrollBarLineReducedBounded / 2) + 'px, 0)');
-    } else {
-      rflect.browser.css.setTransform(this.getScrollBarContainer(),
-          'translate3d(0, ' +
-          -(offsetYWithinBounds / (this.elementSize.height / this.frameElementSize.height) -
-              this.getScrollBarLineHeight(this.elementSize, this.frameElementSize) /
-              2) +
-          'px, 0)');
-    }
-
-    rflect.browser.css.setTransform(this.getScrollBarLine(), 'scaleY(' +
-        scrollBarLineReducedBounded +
-        ')');
+    this.animateScrollBarTo(offsetY);
   }
+}
+
+
+/**
+ * @param {number} offsetY Where to move.
+ */
+rflect.ui.MomentumScroller.prototype.animateScrollBarTo = function(offsetY) {
+  const lowestContentPosition = this.getLowestContentPosition();
+  let offsetYWithinBounds = offsetY;
+  if (offsetY > 0) {
+    offsetYWithinBounds = 0;
+  }
+  else if (offsetY < lowestContentPosition) {
+    offsetYWithinBounds = lowestContentPosition;
+  }
+  const deltaOutOfBounds = Math.abs(offsetY - offsetYWithinBounds);
+  const scrollBarLineReduced = this.getScrollBarLineHeight() - deltaOutOfBounds;
+  const scrollBarLineReducedBounded = scrollBarLineReduced <
+      rflect.ui.MomentumScroller.SCROLLBAR_MIN_HEIGHT ?
+      rflect.ui.MomentumScroller.SCROLLBAR_MIN_HEIGHT : scrollBarLineReduced;
+
+  if (offsetY > 0) {
+    rflect.browser.css.setTransform(this.getScrollBarContainer(),
+        `translate3d(0, ${scrollBarLineReducedBounded / 2}px, 0)`);
+  } else if (offsetY < lowestContentPosition) {
+    rflect.browser.css.setTransform(this.getScrollBarContainer(),
+        `translate3d(0, ${(this.frameElementSize.height -
+            scrollBarLineReducedBounded / 2)}px, 0)`);
+  } else {
+    rflect.browser.css.setTransform(this.getScrollBarContainer(),
+        `translate3d(0, ${
+        -(offsetYWithinBounds / this.getSizeRatio() -
+        this.getScrollBarLineHeight() / 2)
+        }px, 0)`);
+  }
+
+  rflect.browser.css.setTransform(this.getScrollBarLine(),
+      `scaleY(${scrollBarLineReducedBounded})`);
 }
 
 
@@ -848,32 +881,27 @@ rflect.ui.MomentumScroller.prototype.animateWithinBounds = function(aOffsetY) {
 rflect.ui.MomentumScroller.prototype.snapToBounds = function() {
   const transition = rflect.browser.css.getSelectorCasedProperty('transform') +
     ' ' + 500 + 'ms ease-out';
-  rflect.browser.css.setTransition(this.element, transition);
-  rflect.browser.css.setTransition(this.getScrollBarContainer(), transition);
-  rflect.browser.css.setTransition(this.getScrollBarLine(), transition);
+  this.setTransitionAll(transition);
 
   // Different out of bounds cases:
   // 1. If content is lower than frame upper border
   if (this.contentOffsetY > 0) {
     this.contentOffsetY = 0;
     rflect.browser.css.setTransform(this.getScrollBarContainer(),
-        'translate3d(0, ' + (this.getScrollBarLineHeight(this.elementSize,
-        this.frameElementSize) / 2) + 'px, 0)');
+        `translate3d(0, ${(this.getScrollBarLineHeight() / 2)}px, 0)`);
   }
   else {
   // 2. If content is higher that frame lower border.
     this.contentOffsetY = this.getLowestContentPosition();
     rflect.browser.css.setTransform(this.getScrollBarContainer(),
-        'translate3d(0, ' + (this.frameElementSize.height -
-        this.getScrollBarLineHeight(this.elementSize,
-        this.frameElementSize) / 2) + 'px, 0)');
+        `translate3d(0, ${this.frameElementSize.height -
+        this.getScrollBarLineHeight() / 2}px, 0)`);
   }
 
-  rflect.browser.css.setTransform(this.element, 'translate3d(0, ' +
-      this.contentOffsetY + 'px, 0)');
-  rflect.browser.css.setTransform(this.getScrollBarLine(), 'scaleY(' +
-        this.getScrollBarLineHeight(this.elementSize, this.frameElementSize) +
-        ')');
+  rflect.browser.css.setTransform(this.element,
+      `translate3d(0, ${this.contentOffsetY}px, 0)`);
+  rflect.browser.css.setTransform(this.getScrollBarLine(),
+      `scaleY(${this.getScrollBarLineHeight()})`);
 
   this.isDecelerating_ = true;
 }
@@ -1015,14 +1043,11 @@ rflect.ui.MomentumScroller.prototype.doMomentum = function() {
       rflect.browser.css.setTransition(this.element, transition);
       rflect.browser.css.setTransition(this.getScrollBarContainer(), transition);
       this.contentOffsetY = newY;
-      rflect.browser.css.setTransform(this.element, 'translate3d(0, ' + newY + 
-          'px, 0)');
+      rflect.browser.css.setTransform(this.element,
+          `translate3d(0, ${newY}px, 0)`);
       rflect.browser.css.setTransform(this.getScrollBarContainer(),
-          'translate3d(0, ' +
-          -(newY / (this.elementSize.height / this.frameElementSize.height) -
-              this.getScrollBarLineHeight(this.elementSize,
-              this.frameElementSize) / 2) +
-          'px, 0)');
+          `translate3d(0, ${-(newY / this.getSizeRatio() -
+          this.getScrollBarLineHeight() / 2)}px, 0)`);
     }
 
     this.isDecelerating_ = true;
@@ -1069,15 +1094,13 @@ rflect.ui.MomentumScroller.prototype.setUpTransitionStage1 = function() {
       (1 - valueToLowerCubicBezierWith) +
       ')'
   rflect.browser.css.setTransition(this.element, transition);
-  rflect.browser.css.setTransform(this.element, 'translate3d(0, ' +
-      this.contentOffsetY + 'px, 0)');
+  rflect.browser.css.setTransform(this.element,
+      `translate3d(0, ${this.contentOffsetY}px, 0)`);
 
   rflect.browser.css.setTransition(this.getScrollBarContainer(), transition);
-  rflect.browser.css.setTransform(this.getScrollBarContainer(), 'translate3d(0, ' +
-      -(this.contentOffsetY / (this.elementSize.height / this.frameElementSize.height) -
-      this.getScrollBarLineHeight(this.elementSize, this.frameElementSize) /
-      2) +
-      'px, 0)');
+  rflect.browser.css.setTransform(this.getScrollBarContainer(),
+      `translate3d(0, ${-(this.contentOffsetY / this.getSizeRatio() -
+      this.getScrollBarLineHeight() / 2)}px, 0)`);
 
   this.queuedTransitionStage_ =
       rflect.ui.MomentumScroller.QUEUED_TRANSITION_STAGE.TO_BOUNDS;
@@ -1112,21 +1135,20 @@ rflect.ui.MomentumScroller.prototype.setUpTransitionStage2 = function() {
   let transition = rflect.browser.css.getSelectorCasedProperty('transform') +
       ' ' + time + 'ms cubic-bezier(0.33, 0.66, 0.66, 1)';
   rflect.browser.css.setTransition(this.element, transition);
-  rflect.browser.css.setTransform(this.element, 'translate3d(0, ' + newY +
-      'px, 0)');
-  let scrollBarLineReduced = this.getScrollBarLineHeight(this.elementSize,
-      this.frameElementSize) - Math.abs(displacement);
+  rflect.browser.css.setTransform(this.element,
+      `translate3d(0, ${newY}px, 0)`);
+  let scrollBarLineReduced = this.getScrollBarLineHeight() - Math.abs(displacement);
   rflect.browser.css.setTransition(this.getScrollBarContainer(), transition);
   rflect.browser.css.setTransition(this.getScrollBarLine(), transition);
-  rflect.browser.css.setTransform(this.getScrollBarLine(), 'scaleY(' +
-      scrollBarLineReduced +
-      ')');
+  rflect.browser.css.setTransform(this.getScrollBarLine(),
+      `scaleY(${scrollBarLineReduced})`);
   if (velocity > 0) {
     rflect.browser.css.setTransform(this.getScrollBarContainer(),
-        'translate3d(0, ' + scrollBarLineReduced / 2 + 'px, 0)');
+        `translate3d(0, ${scrollBarLineReduced / 2}px, 0)`);
   } else {
     rflect.browser.css.setTransform(this.getScrollBarContainer(),
-        'translate3d(0, ' + (this.frameElementSize.height - scrollBarLineReduced / 2) + 'px, 0)');
+        `translate3d(0, ${(this.frameElementSize.height - scrollBarLineReduced /
+         2)}px, 0)`);
   }
 
   this.queuedTransitionStage_ =
@@ -1156,6 +1178,22 @@ rflect.ui.MomentumScroller.prototype.getMatrixForElement = function(aElement) {
 }
 
 
+/***/
+rflect.ui.MomentumScroller.prototype.clearTransitionAll = function() {
+  this.setTransitionAll('');
+}
+
+
+/**
+ * @param {string} aTransition
+ */
+rflect.ui.MomentumScroller.prototype.setTransitionAll = function(aTransition) {
+  rflect.browser.css.setTransition(this.element, aTransition);
+  rflect.browser.css.setTransition(this.getScrollBarContainer(), aTransition);
+  rflect.browser.css.setTransition(this.getScrollBarLine(), aTransition);
+}
+
+
 rflect.ui.MomentumScroller.prototype.stopMomentum = function() {
   if (this.isDecelerating()) {
     let elementMatrix = this.getMatrixForElement(this.element);
@@ -1164,15 +1202,13 @@ rflect.ui.MomentumScroller.prototype.stopMomentum = function() {
     let scrollBarLineMatrix = this.getMatrixForElement(this.getScrollBarLine());
 
     // Clear the active transition so it doesn’t apply to our next transform.
-    rflect.browser.css.setTransition(this.element, '');
-    rflect.browser.css.setTransition(this.getScrollBarContainer(), '');
-    rflect.browser.css.setTransition(this.getScrollBarLine(), '');
+    this.clearTransitionAll();
     // Set the element transform to where it is right now.
     this.animateTo(elementMatrix.m42, true);
     rflect.browser.css.setTransform(this.getScrollBarContainer(),
-        'translate3d(0, ' + scrollBarContainerMatrix.m42 + 'px, 0)');
+        `translate3d(0, ${scrollBarContainerMatrix.m42}px, 0)`);
     rflect.browser.css.setTransform(this.getScrollBarLine(),
-        'scaleY(' + scrollBarLineMatrix.m22 + ')');
+        `scaleY(${scrollBarLineMatrix.m22})`);
     this.queuedTransitionStage_ =
         rflect.ui.MomentumScroller.QUEUED_TRANSITION_STAGE.NONE;
 

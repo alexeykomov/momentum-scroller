@@ -110,6 +110,12 @@ rflect.ui.MomentumScroller.SCROLLBAR_HIDE_TRANSITION = 'opacity .2s';
 
 
 /**
+ * @type {string}
+ */
+rflect.ui.MomentumScroller.STANDARD_SCROLL_BAR_COLOR = 'rgb(181, 181, 181)';
+
+
+/**
  * Stylesheet with base classes for scrollbar.
  * @type {Array.<string>}
  */
@@ -134,7 +140,7 @@ rflect.ui.MomentumScroller.SCROLLBAR_STYLESHEET = [
     box-sizing: border-box;
     width: ${rflect.ui.MomentumScroller.SCROLLBAR_THICKNESS}px;
     height: ${rflect.ui.MomentumScroller.SCROLLBAR_THICKNESS}px;
-    background-color: rgb(181, 181, 181);
+    background-color: ${rflect.ui.MomentumScroller.STANDARD_SCROLL_BAR_COLOR};
   }
   `,`
   .scrollbar-vertical-top {
@@ -151,7 +157,7 @@ rflect.ui.MomentumScroller.SCROLLBAR_STYLESHEET = [
     box-sizing: border-box;
     width: ${rflect.ui.MomentumScroller.SCROLLBAR_THICKNESS}px;
     height: 1px;
-    background-color: rgb(181, 181, 181);
+    background-color: ${rflect.ui.MomentumScroller.STANDARD_SCROLL_BAR_COLOR};
   }
   `
 ];
@@ -317,9 +323,9 @@ rflect.ui.MomentumScroller.prototype.frameElementSize;
 
 
 /**
- * @type {CSSStyleDeclaration}
+ * @type {{position: string, overflow: string}}
  */
-rflect.ui.MomentumScroller.prototype.frameElementComputedStyle;
+rflect.ui.MomentumScroller.prototype.frameElementInitialStyle;
 
 
 /**
@@ -377,42 +383,27 @@ rflect.ui.MomentumScroller.prototype.isScrollBarEnabled = function() {
  * Enables momentum scrolling. Call setElement before.
  * @see {setElement}
  * @param {boolean} aEnabled Whether to enable behavior.
+ * @param {boolean} useScrollPos Whether to use native scroll top.
  */
-rflect.ui.MomentumScroller.prototype.enable = function(aEnabled) {
-  var enabled = this.isEnabled();
+rflect.ui.MomentumScroller.prototype.enable = function(aEnabled, useScrollPos) {
+  const enabled = this.isEnabled();
   if (enabled == aEnabled)
     return;
 
   this.enabled_ = aEnabled;
 
   if (aEnabled) {
-    rflect.ui.MomentumScroller.instancesCount_++;
-    if (1 == rflect.ui.MomentumScroller.instancesCount_) {
-      this.addStyleSheet();
-    }
-    this.setUpStyles();
+    this.setUpStyles(++rflect.ui.MomentumScroller.instancesCount_ == 1);
     this.calculateSizes();
-
+    this.setUpPosition(useScrollPos);
+    this.addScrollBar();
     this.enterDocument();
-    this.animateWithinBounds(this.contentOffsetY);
-
-    rflect.browser.css.setTransform(this.getScrollBarLine(),
-        `scaleY(${this.getScrollBarLineHeight()})`);
-    this.frameElement.appendChild(this.getScrollBarContainer());
-
   } else {
-    rflect.ui.MomentumScroller.instancesCount_--;
-    if (rflect.ui.MomentumScroller.instancesCount_ < 0) {
-      rflect.ui.MomentumScroller.instancesCount_ = 0;
-    }
-
-    goog.dom.removeNode(this.getScrollBarContainer());
-    if (0 == rflect.ui.MomentumScroller.instancesCount_) {
-      this.removeStyleSheet();
-    }
-    this.restoreStyles();
-
     this.exitDocument();
+    this.removeScrollBar();
+    this.restorePosition(useScrollPos);
+    this.restoreStyles(--rflect.ui.MomentumScroller.instancesCount_ == 0);
+
     this.element = null;
     this.frameElement = null;
   }
@@ -420,9 +411,61 @@ rflect.ui.MomentumScroller.prototype.enable = function(aEnabled) {
 
 
 /**
+ * @private
+ * @param {boolean} useScrollPos Whether to use native scroll top.
+ */
+rflect.ui.MomentumScroller.prototype.setUpPosition = function(useScrollPos) {
+  if ('scroll' == this.frameElementInitialStyle.overflow) {
+    if (useScrollPos) {
+      this.setScrollTop(this.frameElement.scrollTop);
+    } else {
+      this.animateWithinBounds(this.contentOffsetY);
+    }
+    this.frameElement.scrollTop = 0;
+  } else {
+    this.animateWithinBounds(this.contentOffsetY);
+  }
+}
+
+
+/**
+ * @private
+ * @param {boolean} useScrollPos Whether to use native scroll top.
+ */
+rflect.ui.MomentumScroller.prototype.restorePosition = function(useScrollPos) {
+  if (useScrollPos && 'scroll' == this.frameElementInitialStyle.overflow) {
+    this.frameElement.scrollTop = this.getScrollTop();
+  }
+  rflect.browser.css.setTransform(this.element, '');
+}
+
+
+/**
+ * @private
+ */
+rflect.ui.MomentumScroller.prototype.addScrollBar = function() {
+  rflect.browser.css.setTransform(this.getScrollBarLine(),
+      `scaleY(${this.getScrollBarLineHeight()})`);
+  this.frameElement.appendChild(this.getScrollBarContainer());
+}
+
+
+/**
+ * @private
+ */
+rflect.ui.MomentumScroller.prototype.removeScrollBar = function() {
+  goog.dom.removeNode(this.getScrollBarContainer());
+}
+
+
+/**
  * @protected
  */
 rflect.ui.MomentumScroller.prototype.resetInternal = function() {
+  if (this.element && this.frameElement) {
+    this.animateWithinBounds(0);
+  }
+
   this.startTouchY = 0;
   this.contentOffsetY = 0;
   this.contentStartOffsetY = 0;
@@ -432,50 +475,36 @@ rflect.ui.MomentumScroller.prototype.resetInternal = function() {
 /**
  * Attaches scroller.
  * @param {Element} aElement Scrollable element to add scroller to.
+ * @param {boolean=} opt_useScrollPos Whether to set initial scroll position
+ * from frameElement's scrollTop.
  */
-rflect.ui.MomentumScroller.prototype.add = function(aElement) {
+rflect.ui.MomentumScroller.prototype.add = function(aElement,
+    opt_useScrollPos) {
   this.setFrameElement(aElement);
   this.setElement(goog.dom.getFirstElementChild(aElement));
-  this.enable(true);
+  this.enable(true, !!opt_useScrollPos);
 }
 
 
 /**
  * Detaches scroller.
+ * @param {boolean=} opt_useScrollPos Whether to set frameElement's
+ * scrollTop after removal.
+ *
+ * This method saves <code>contentOffsetY</code>, so the next <code>add</code>
+ * call will restore scroll position. To prevent this, call <code>reset</code>
+ * before <code>add</code>.
  */
-rflect.ui.MomentumScroller.prototype.remove = function() {
-  this.enable(false);
+rflect.ui.MomentumScroller.prototype.remove = function(opt_useScrollPos) {
+  this.enable(false, !!opt_useScrollPos);
 }
 
 
 /**
  * Detaches/attaches scroller losing scroll position.
- * @param {Element} aElement Scrollable element to add scroller to.
  */
-rflect.ui.MomentumScroller.prototype.reset = function(aElement) {
-  this.remove();
+rflect.ui.MomentumScroller.prototype.reset = function() {
   this.resetInternal();
-  this.add(aElement);
-}
-
-
-/**
- * Detaches scroller, but without losing scroll position.
- */
-rflect.ui.MomentumScroller.prototype.suspend = function() {
-  this.remove();
-}
-
-
-/**
- * Attaches scroller to saved scroll position.
- * @param {Element} aElement Scrollable element to add scroller to.
- */
-rflect.ui.MomentumScroller.prototype.resume = function(aElement) {
-  if (goog.DEBUG)
-    console.log('Resuming to this.contentOffsetY: ', this.contentOffsetY);
-  this.add(aElement);
-  this.animateWithinBounds(this.contentOffsetY);
 }
 
 
@@ -1294,26 +1323,48 @@ rflect.ui.MomentumScroller.prototype.removeStyleSheet = function() {
 
 /**
  * Add specific scroller styles.
+ * @param {boolean} aAddGlobalStyleSheet Whether to add global style sheet.
+ * TODO(alexk): do we need instances count per document?
  */
-rflect.ui.MomentumScroller.prototype.setUpStyles = function() {
-  this.frameElementComputedStyle = document.defaultView.getComputedStyle(
+rflect.ui.MomentumScroller.prototype.setUpStyles =
+    function(aAddGlobalStyleSheet) {
+  const {position, overflow} = document.defaultView.getComputedStyle(
       this.frameElement, null);
   if (goog.DEBUG)
-    console.log('this.frameElementComputedStyle.overflow: ', this.frameElementComputedStyle.overflow);
+    console.log('frameElementInitialStyle overflow: ', overflow);
   if (goog.DEBUG)
-    console.log('this.frameElementComputedStyle.position: ', this.frameElementComputedStyle.position);
+    console.log('frameElementInitialStyle position: ', position);
+
+  this.frameElementInitialStyle = {
+    overflow: overflow,
+    position: position
+  }
 
   this.frameElement.style.overflow = 'hidden';
   this.frameElement.style.position = 'relative';
+
+  if (aAddGlobalStyleSheet) {
+    this.addStyleSheet();
+  }
 }
 
 
 /**
  * Restores styles.
+ * @param {boolean} aShouldRemoveGlobalStyleSheet Whether to remove global style
+ * sheet.
  */
-rflect.ui.MomentumScroller.prototype.restoreStyles = function() {
-  this.frameElement.style.overflow = this.frameElementComputedStyle.overflow;
-  this.frameElement.style.position = this.frameElementComputedStyle.position;
+rflect.ui.MomentumScroller.prototype.restoreStyles =
+    function(aShouldRemoveGlobalStyleSheet) {
+  if (goog.DEBUG)
+    console.log('restoreStyles this.frameElementInitialStyle: ',
+        this.frameElementInitialStyle);
+  this.frameElement.style.overflow = this.frameElementInitialStyle.overflow;
+  this.frameElement.style.position = this.frameElementInitialStyle.position;
+
+  if (aShouldRemoveGlobalStyleSheet) {
+    this.removeStyleSheet();
+  }
 }
 
 
@@ -1350,7 +1401,7 @@ rflect.ui.MomentumScroller.prototype.getScrollBarLine = function() {
  */
 rflect.ui.MomentumScroller.prototype.disposeInternal = function() {
   //Dispose logic specific for MomentumScroller.
-  this.enable(false);
+  this.enable(false, false);
   this.resetInternal();
   this.scrollBarContainer_ = null;
   this.scrollBarLine_ = null;
@@ -1362,8 +1413,6 @@ goog.exportSymbol('MomentumScroller', rflect.ui.MomentumScroller);
 goog.exportSymbol('MomentumScroller.prototype.add', rflect.ui.MomentumScroller.prototype.add);
 goog.exportSymbol('MomentumScroller.prototype.remove', rflect.ui.MomentumScroller.prototype.remove);
 goog.exportSymbol('MomentumScroller.prototype.reset', rflect.ui.MomentumScroller.prototype.reset);
-goog.exportSymbol('MomentumScroller.prototype.suspend', rflect.ui.MomentumScroller.prototype.suspend);
-goog.exportSymbol('MomentumScroller.prototype.resume', rflect.ui.MomentumScroller.prototype.resume);
 goog.exportSymbol('MomentumScroller.prototype.getScrollTop', rflect.ui.MomentumScroller.prototype.getScrollTop);
 goog.exportSymbol('MomentumScroller.prototype.setScrollTop', rflect.ui.MomentumScroller.prototype.setScrollTop);
 goog.exportSymbol('MomentumScroller.prototype.dispose', rflect.ui.MomentumScroller.prototype.dispose);

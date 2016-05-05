@@ -20,7 +20,6 @@ node_modules
 npm-debug.log
 
 # Project
-build
 client_secret_*.json
 # For additionally disabled files, look into css/.gitignore, js/.gitignore,
 # logs/.gitignore

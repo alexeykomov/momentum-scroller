@@ -13,6 +13,7 @@ goog.provide('rflect.ui.MomentumScroller');
 
 
 goog.require('goog.dom');
+goog.require('goog.dom.classlist');
 goog.require('goog.events');
 goog.require('goog.events.EventHandler');
 goog.require('goog.events.EventType');
@@ -67,6 +68,13 @@ rflect.ui.MomentumScroller.ACCELERATION_BOUNCE_BACK_COEFF = 10;
 
 
 /**
+ * Whether element receives colored background for debug purposes.
+ * @define {boolean}
+ */
+rflect.ui.MomentumScroller.COLOR_DEBUG = false;
+
+
+/**
  * Stages of out-of-bounds transitions.
  * @enum {number}
  */
@@ -112,7 +120,10 @@ rflect.ui.MomentumScroller.SCROLLBAR_HIDE_TRANSITION = 'opacity .2s';
 /**
  * @type {string}
  */
-rflect.ui.MomentumScroller.STANDARD_SCROLL_BAR_COLOR = 'rgb(181, 181, 181)';
+rflect.ui.MomentumScroller.STANDARD_SCROLL_BAR_COLOR =
+    rflect.ui.MomentumScroller.COLOR_DEBUG ?
+        '#000' :
+        'rgb(181, 181, 181)';
 
 
 /**
@@ -386,6 +397,9 @@ rflect.ui.MomentumScroller.prototype.isScrollBarEnabled = function() {
  * @param {boolean} useScrollPos Whether to use native scroll top.
  */
 rflect.ui.MomentumScroller.prototype.enable = function(aEnabled, useScrollPos) {
+  if (!goog.labs.userAgent.platform.isIos())
+    return;
+
   const enabled = this.isEnabled();
   if (enabled == aEnabled)
     return;
@@ -647,6 +661,10 @@ rflect.ui.MomentumScroller.prototype.onTouchStart = function(aEvent) {
   this.previousPoint_ = this.currentPoint_ = this.startTouchY;
   this.previousMoment_ = this.currentMoment_ = goog.now();
 
+  if (rflect.ui.MomentumScroller.COLOR_DEBUG && goog.DEBUG) {
+    goog.dom.classlist.removeAll(this.element, ['red', 'blue', 'green']);
+  }
+
   this.isDragging_ = true;
 }
 
@@ -818,6 +836,9 @@ rflect.ui.MomentumScroller.prototype.onTransitionEnd = function(aEvent) {
       rflect.browser.css.setTransition(this.element, '');
       rflect.browser.css.setTransition(this.getScrollBarLine(), '');
       rflect.browser.css.setTransition(this.getScrollBarContainer(), '');
+      if (rflect.ui.MomentumScroller.COLOR_DEBUG && goog.DEBUG) {
+        goog.dom.classlist.removeAll(this.element, ['blue', 'red', 'green']);
+      }
       this.showScrollBarDelayed(false);
       this.isDecelerating_ = false;
     };break;
@@ -1107,7 +1128,7 @@ rflect.ui.MomentumScroller.prototype.setUpTransitionStage1 = function() {
       this.getEndMomentumVelocity(velocity, displacement, acceleration);
   if (goog.DEBUG)
     console.log('this.endMomentumVelocity_', this.endMomentumVelocity_);
-  var time = Math.abs((velocity - this.endMomentumVelocity_) / acceleration);
+  var time = /*Math.abs((velocity - this.endMomentumVelocity_) / acceleration)*/7000;
 
   //This is an y delta to flatten bezier function towards linear one if end
   // velocity is non-zero. In corner case, when velocity didn't slow at all,
@@ -1130,6 +1151,12 @@ rflect.ui.MomentumScroller.prototype.setUpTransitionStage1 = function() {
   rflect.browser.css.setTransform(this.getScrollBarContainer(),
       `translate3d(0, ${-(this.contentOffsetY / this.getSizeRatio() -
       this.getScrollBarLineHeight() / 2)}px, 0)`);
+
+
+  if (rflect.ui.MomentumScroller.COLOR_DEBUG && goog.DEBUG) {
+    goog.dom.classlist.add(this.element, 'blue');
+    goog.dom.classlist.removeAll(this.element, ['red', 'green']);
+  }
 
   this.queuedTransitionStage_ =
       rflect.ui.MomentumScroller.QUEUED_TRANSITION_STAGE.TO_BOUNDS;
@@ -1180,6 +1207,11 @@ rflect.ui.MomentumScroller.prototype.setUpTransitionStage2 = function() {
          2)}px, 0)`);
   }
 
+  if (rflect.ui.MomentumScroller.COLOR_DEBUG && goog.DEBUG) {
+    goog.dom.classlist.add(this.element, 'red');
+    goog.dom.classlist.removeAll(this.element, ['blue', 'green']);
+  }
+
   this.queuedTransitionStage_ =
       rflect.ui.MomentumScroller.QUEUED_TRANSITION_STAGE.BOUNCED_OUT;
 
@@ -1188,6 +1220,10 @@ rflect.ui.MomentumScroller.prototype.setUpTransitionStage2 = function() {
 
 rflect.ui.MomentumScroller.prototype.setUpTransitionStage3 = function() {
   this.snapToBounds();
+  if (rflect.ui.MomentumScroller.COLOR_DEBUG && goog.DEBUG) {
+    goog.dom.classlist.add(this.element, 'green');
+    goog.dom.classlist.removeAll(this.element, ['blue', 'red']);
+  }
   this.queuedTransitionStage_ =
       rflect.ui.MomentumScroller.QUEUED_TRANSITION_STAGE.BOUNCED_BACK;
 }
